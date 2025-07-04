@@ -31,10 +31,12 @@ export default function Admin() {
     return <Navigate to="/auth" replace />;
   }
 
-  if (!isAdmin) {
+  setTimeout(() => {
+     if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
-
+  }, 500)
+  
   // Fetch admin stats
   const { data: stats, refetch: refetchStats } = useQuery({
     queryKey: ['admin-stats'],
