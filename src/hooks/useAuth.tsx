@@ -19,11 +19,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   const checkAdminStatus = async (user: User | null) => {
-    if (!user) {
-      setIsAdmin(false);
-      return;
-    }
-
+    
     // Check if user has admin email
     if (user.email === 'robenthymo@gmail.com') {
       setIsAdmin(true);
