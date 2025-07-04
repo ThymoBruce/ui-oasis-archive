@@ -23,12 +23,16 @@ import {
 import { Navigate } from 'react-router-dom';
 
 export default function Admin() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const [isScrapingRunning, setIsScrapingRunning] = useState(false);
 
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
   }
 
   // Fetch admin stats
