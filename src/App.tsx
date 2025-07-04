@@ -10,6 +10,10 @@ import Upload from "./pages/Upload";
 import Browse from "./pages/Browse";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
+import Categories from "./pages/Categories";
+import Collections from "./pages/Collections";
+import MyUploads from "./pages/MyUploads";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +34,10 @@ const App = () => (
             <Route path="/admin" element={<Admin />} />
             <Route path="/search" element={<Browse />} />
             <Route path="/favorites" element={<Profile />} />
+            <Route path="/categories" element={<Categories />} />
+            <Route path="/collections" element={<Collections />} />
+            <Route path="/my-uploads" element={<MyUploads />} />
+            <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
