@@ -27,11 +27,12 @@ export default function Admin() {
   const { toast } = useToast();
   const [isScrapingRunning, setIsScrapingRunning] = useState(false);
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
+
 
   setTimeout(() => {
+      if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
      if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
