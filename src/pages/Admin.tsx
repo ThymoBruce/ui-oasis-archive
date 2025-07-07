@@ -36,11 +36,7 @@ export default function Admin() {
   const [newWebsiteName, setNewWebsiteName] = useState('');
   const [newWebsiteUrl, setNewWebsiteUrl] = useState('');
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-  
-  if (!isAdmin) {
+  if (user && !isAdmin) {
     return <Navigate to="/" replace />;
   }
   
