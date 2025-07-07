@@ -50,7 +50,7 @@ export default function CategoryContent() {
       }
 
       if (contentType !== 'all') {
-        query = query.eq('content_type', contentType);
+        query = query.eq('content_type', contentType as 'design' | 'component_library' | 'ui_component' | 'website');
       }
 
       const orderDirection = sortBy === 'title' ? { ascending: true } : { ascending: false };

@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,25 +19,30 @@ import {
   CheckCircle,
   Clock,
   Loader2,
-  Play
+  Play,
+  Plus,
+  Trash2,
+  Power,
+  PowerOff
 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 
 export default function Admin() {
   const { user, isAdmin } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isScrapingRunning, setIsScrapingRunning] = useState(false);
+  const [showAddWebsite, setShowAddWebsite] = useState(false);
+  const [newWebsiteName, setNewWebsiteName] = useState('');
+  const [newWebsiteUrl, setNewWebsiteUrl] = useState('');
 
-
-
-  setTimeout(() => {
-      if (!user) {
+  if (!user) {
     return <Navigate to="/auth" replace />;
   }
-     if (!isAdmin) {
+  
+  if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
-  }, 500)
   
   // Fetch admin stats
   const { data: stats, refetch: refetchStats } = useQuery({
@@ -68,6 +74,20 @@ export default function Admin() {
     },
   });
 
+  // Fetch auto-scrape websites
+  const { data: autoScrapeWebsites, refetch: refetchWebsites } = useQuery({
+    queryKey: ['auto-scrape-websites'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('auto_scrape_websites')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
   // Fetch recent content for moderation
   const { data: pendingContent, refetch: refetchPending } = useQuery({
     queryKey: ['pending-content'],
@@ -85,6 +105,90 @@ export default function Admin() {
       if (error) throw error;
       return data;
     },
+  });
+
+  const addWebsite = useMutation({
+    mutationFn: async () => {
+      if (!newWebsiteName || !newWebsiteUrl) throw new Error('Name and URL required');
+      
+      const { error } = await supabase
+        .from('auto_scrape_websites')
+        .insert({
+          name: newWebsiteName,
+          url: newWebsiteUrl
+        });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Website added",
+        description: "Website has been added to the auto-scrape list.",
+      });
+      
+      setNewWebsiteName('');
+      setNewWebsiteUrl('');
+      setShowAddWebsite(false);
+      refetchWebsites();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const toggleWebsiteActive = useMutation({
+    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
+      const { error } = await supabase
+        .from('auto_scrape_websites')
+        .update({ is_active: !isActive })
+        .eq('id', id);
+      
+      if (error) throw error;
+      return { isActive };
+    },
+    onSuccess: ({ isActive }) => {
+      toast({
+        title: "Website updated",
+        description: `Website has been ${isActive ? 'disabled' : 'enabled'}.`,
+      });
+      refetchWebsites();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const removeWebsite = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('auto_scrape_websites')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Website removed",
+        description: "Website has been removed from the auto-scrape list.",
+      });
+      refetchWebsites();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   });
 
   const handleAutoScrape = async () => {
@@ -248,83 +352,116 @@ export default function Admin() {
             </Card>
           </div>
 
-          {/* Content Type Breakdown */}
+          {/* Auto Scraping Websites Management */}
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle>Content Breakdown by Type</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-primary">
-                    {stats?.content.byType.design}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Designs</div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="h-5 w-5" />
+                    Auto-Scrape Websites
+                  </CardTitle>
+                  <CardDescription>
+                    Manage the list of websites to automatically scrape for content
+                  </CardDescription>
                 </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-primary">
-                    {stats?.content.byType.component_library}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Libraries</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-primary">
-                    {stats?.content.byType.ui_component}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Components</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-primary">
-                    {stats?.content.byType.website}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Websites</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Auto Scraping Info */}
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5" />
-                Automated Content Scraping
-              </CardTitle>
-              <CardDescription>
-                Automatically scrape content from top 25 design websites to populate the platform
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="p-4 border rounded-lg bg-muted/20">
-                  <h4 className="font-semibold mb-2">What gets scraped:</h4>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• Dribbble, Behance, UI8, Figma Community</li>
-                    <li>• Material-UI, Ant Design, Chakra UI, Mantine</li>
-                    <li>• Tailwind UI, shadcn/ui, NextUI, Headless UI</li>
-                    <li>• Framer Motion, Styled Components, Radix UI</li>
-                    <li>• React Bootstrap, Blueprint, Semantic UI</li>
-                  </ul>
-                </div>
-                
-                <Button 
-                  onClick={handleAutoScrape}
-                  disabled={isScrapingRunning}
-                  size="lg"
-                  className="w-full"
+                <Button
+                  onClick={() => setShowAddWebsite(!showAddWebsite)}
+                  size="sm"
                 >
-                  {isScrapingRunning ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Scraping Top 25 Design Websites...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCcw className="h-4 w-4 mr-2" />
-                      Start Auto-Scraping (25 Websites)
-                    </>
-                  )}
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Website
                 </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {showAddWebsite && (
+                <div className="mb-6 p-4 border rounded-lg bg-muted/20">
+                  <h4 className="font-semibold mb-3">Add New Website</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Website Name</label>
+                      <Input
+                        placeholder="e.g., Dribbble"
+                        value={newWebsiteName}
+                        onChange={(e) => setNewWebsiteName(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Website URL</label>
+                      <Input
+                        placeholder="https://dribbble.com"
+                        value={newWebsiteUrl}
+                        onChange={(e) => setNewWebsiteUrl(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-4">
+                    <Button 
+                      onClick={() => addWebsite.mutate()}
+                      disabled={addWebsite.isPending}
+                      size="sm"
+                    >
+                      {addWebsite.isPending ? 'Adding...' : 'Add Website'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowAddWebsite(false);
+                        setNewWebsiteName('');
+                        setNewWebsiteUrl('');
+                      }}
+                      size="sm"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {autoScrapeWebsites?.map((website) => (
+                  <div key={website.id} className="border rounded-lg p-4 bg-card">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-sm">{website.name}</h4>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {website.url}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => toggleWebsiteActive.mutate({ id: website.id, isActive: website.is_active })}
+                          className="p-1"
+                          disabled={toggleWebsiteActive.isPending}
+                        >
+                          {website.is_active ? (
+                            <Power className="h-3 w-3 text-green-500" />
+                          ) : (
+                            <PowerOff className="h-3 w-3 text-red-500" />
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => removeWebsite.mutate(website.id)}
+                          className="p-1"
+                          disabled={removeWebsite.isPending}
+                        >
+                          <Trash2 className="h-3 w-3 text-red-500" />
+                        </Button>
+                      </div>
+                    </div>
+                    <Badge
+                      variant={website.is_active ? "default" : "secondary"}
+                      className="mt-2"
+                    >
+                      {website.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>

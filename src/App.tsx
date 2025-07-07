@@ -11,7 +11,11 @@ import Browse from "./pages/Browse";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import Categories from "./pages/Categories";
+import CategoryContent from "./pages/CategoryContent";
 import Collections from "./pages/Collections";
+import CollectionDetails from "./pages/CollectionDetails";
+import CreateCollection from "./pages/CreateCollection";
+import ContentDetails from "./pages/ContentDetails";
 import MyUploads from "./pages/MyUploads";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -35,7 +39,11 @@ const App = () => (
             <Route path="/search" element={<Browse />} />
             <Route path="/favorites" element={<Profile />} />
             <Route path="/categories" element={<Categories />} />
+            <Route path="/categories/:name" element={<CategoryContent />} />
             <Route path="/collections" element={<Collections />} />
+            <Route path="/collections/new" element={<CreateCollection />} />
+            <Route path="/collections/:id" element={<CollectionDetails />} />
+            <Route path="/content/:id" element={<ContentDetails />} />
             <Route path="/my-uploads" element={<MyUploads />} />
             <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
