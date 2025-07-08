@@ -36,13 +36,9 @@ export default function Admin() {
   const [newWebsiteName, setNewWebsiteName] = useState('');
   const [newWebsiteUrl, setNewWebsiteUrl] = useState('');
 
-  setTimeout(() => {
-
-    if(!isAdmin){
-      navigate('/', {replace: true});
-    }
-    
-  },500)
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
   
   // Fetch admin stats
   const { data: stats, refetch: refetchStats } = useQuery({

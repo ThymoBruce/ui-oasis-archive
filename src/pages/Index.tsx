@@ -143,7 +143,7 @@ const Index = () => {
             {categories?.map((category) => (
               <Link
                 key={category.id}
-                to={`/category/${category.id}`}
+                to={`/categories/${encodeURIComponent(category.name)}`}
                 className="group p-6 bg-card rounded-lg border hover:border-primary/50 transition-all duration-300 hover:shadow-md hover:-translate-y-1"
               >
                 <div className="text-center">

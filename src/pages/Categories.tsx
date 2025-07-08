@@ -77,7 +77,7 @@ export default function Categories() {
               {filteredCategories?.map((category) => (
                 <Link
                   key={category.id}
-                  to={`/browse?category=${encodeURIComponent(category.name)}`}
+                  to={`/categories/${encodeURIComponent(category.name)}`}
                   className="group"
                 >
                   <Card className="h-full transition-all duration-300 hover:shadow-lg hover:scale-[1.02] group-hover:border-primary/50">
